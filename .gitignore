@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-# application 설정 파일 무시
+# ignore Spring Boot config
 src/main/resources/application.properties
