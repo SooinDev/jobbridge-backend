@@ -38,3 +38,4 @@ out/
 
 # ignore Spring Boot config
 src/main/resources/application.properties
+jobbridge-backend.git/
