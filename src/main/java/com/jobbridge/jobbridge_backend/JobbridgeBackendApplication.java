@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class JobbridgeBackendApplication {
-	// ttttt
+	// ssss
 	public static void main(String[] args) {
 		SpringApplication.run(JobbridgeBackendApplication.class, args);
 	}
