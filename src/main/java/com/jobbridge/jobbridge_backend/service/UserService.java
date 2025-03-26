@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
 
+<<<<<<< HEAD
     // application.properties 삭제
+=======
+>>>>>>> 81721c6978b7e63c9f230ee05531d737bb68663f
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
