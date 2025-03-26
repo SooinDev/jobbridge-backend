@@ -1,6 +1,7 @@
 package com.jobbridge.jobbridge_backend.controller;
 
 import com.jobbridge.jobbridge_backend.dto.LoginRequest;
+import com.jobbridge.jobbridge_backend.dto.SignupRequest;
 import com.jobbridge.jobbridge_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,16 @@ public class UserController {
             return ResponseEntity.ok("로그인 성공!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<String> signup(@RequestBody SignupRequest request) {
+        try {
+            userService.signup(request);
+            return ResponseEntity.ok("회원가입 성공!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원가입 실패: " + e.getMessage());
         }
     }
 }
