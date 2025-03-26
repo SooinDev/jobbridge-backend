@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
 
+    // application.properties 삭제
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
