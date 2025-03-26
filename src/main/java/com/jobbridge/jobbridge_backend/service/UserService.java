@@ -1,6 +1,7 @@
 package com.jobbridge.jobbridge_backend.service;
 
 import com.jobbridge.jobbridge_backend.dto.LoginRequest;
+import com.jobbridge.jobbridge_backend.dto.SignupRequest;
 import com.jobbridge.jobbridge_backend.entity.User;
 import com.jobbridge.jobbridge_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,27 @@ public class UserService {
         if (!passwordEncoder.matches(request.getPw(), user.getPw())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
+    }
 
-        // 로그인 성공 처리 (세션 저장 or 토큰 발급 등은 추후)
+    public void signup(SignupRequest request) {
+        // 이미 존재하는 이메일인지 확인
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+
+        // 비밀번호 암호화
+        String encodedPw = passwordEncoder.encode(request.getPw());
+
+        // 유저 생성 및 저장
+        User user = User.builder()
+                .pw(encodedPw)
+                .name(request.getName())
+                .address(request.getAddress())
+                .age(request.getAge())
+                .email(request.getEmail())
+                .phonenumber(request.getPhonenumber())
+                .build();
+
+        userRepository.save(user);
     }
 }
