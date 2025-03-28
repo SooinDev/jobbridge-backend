@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 @Table(name = "user")
 public class User {
 
-    // User
-    // UserUser
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,6 +34,10 @@ public class User {
     @Column(length = 20)
     private String phonenumber;
 
+    @Column(name = "user_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserType userType;  // 기업 또는 개인 구분
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -44,5 +46,9 @@ public class User {
         if (createdAt == null) {
             createdAt = LocalDateTime.now(); // 현재 시간 자동 입력
         }
+    }
+
+    public enum UserType {
+        INDIVIDUAL, COMPANY
     }
 }

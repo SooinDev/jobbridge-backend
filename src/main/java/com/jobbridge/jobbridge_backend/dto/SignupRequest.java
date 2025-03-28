@@ -12,4 +12,5 @@ public class SignupRequest {
     private Integer age;
     private String email;
     private String phonenumber;
+    private String userType;  // 기업 또는 개인 구분
 }

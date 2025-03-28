@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
 
-    // testtest
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -34,6 +33,9 @@ public class UserService {
         // 비밀번호 암호화
         String encodedPw = passwordEncoder.encode(request.getPw());
 
+        // userType을 ENUM으로 변환
+        User.UserType userType = User.UserType.valueOf(request.getUserType().toUpperCase());
+
         // 유저 생성 및 저장
         User user = User.builder()
                 .pw(encodedPw)
@@ -42,6 +44,7 @@ public class UserService {
                 .age(request.getAge())
                 .email(request.getEmail())
                 .phonenumber(request.getPhonenumber())
+                .userType(userType)  // userType 설정
                 .build();
 
         userRepository.save(user);
