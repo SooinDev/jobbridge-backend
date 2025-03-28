@@ -8,3 +8,4 @@ CREATE TABLE user (
                       phonenumber VARCHAR(20),
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- test
