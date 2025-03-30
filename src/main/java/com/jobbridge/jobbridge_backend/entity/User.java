@@ -36,7 +36,13 @@ public class User {
 
     @Column(name = "user_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private UserType userType;  // 기업 또는 개인 구분
+    private UserType userType;
+
+    @Column(name = "verification_token")
+    private String verificationToken;  // 인증 토큰 저장
+
+    @Column(name = "verified")
+    private boolean verified = false;  // 이메일 인증 상태 (기본값은 false)
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
