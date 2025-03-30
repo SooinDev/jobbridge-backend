@@ -14,6 +14,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;  // 이메일 발송 서비스 추가
 
     public void login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -36,6 +37,9 @@ public class UserService {
         // userType을 ENUM으로 변환
         User.UserType userType = User.UserType.valueOf(request.getUserType().toUpperCase());
 
+        // 인증 토큰 생성
+        String verificationToken = emailService.generateVerificationToken();
+
         // 유저 생성 및 저장
         User user = User.builder()
                 .pw(encodedPw)
@@ -45,8 +49,13 @@ public class UserService {
                 .email(request.getEmail())
                 .phonenumber(request.getPhonenumber())
                 .userType(userType)  // userType 설정
+                .verificationToken(verificationToken) // 인증 토큰 저장
+                .verified(false)  // 초기 상태는 인증되지 않음
                 .build();
 
         userRepository.save(user);
+
+        // 인증 이메일 발송
+        emailService.sendVerificationEmail(request.getEmail(), verificationToken);
     }
 }
