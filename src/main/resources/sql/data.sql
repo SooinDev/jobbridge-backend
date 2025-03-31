@@ -6,7 +6,8 @@ CREATE TABLE user (
                       age INT,
                       email VARCHAR(100) NOT NULL UNIQUE,
                       phonenumber VARCHAR(20),
-                      user_type ENUM('individual', 'company') NOT NULL,  -- 개인 또는 기업 구분
+                      -- user_type ENUM('individual', 'company') NOT NULL,  -- 개인 또는 기업 구분
+                      user_type VARCHAR(20) NOT NULL,
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

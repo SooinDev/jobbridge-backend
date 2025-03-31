@@ -55,6 +55,11 @@ public class User {
     }
 
     public enum UserType {
-        INDIVIDUAL, COMPANY
+        INDIVIDUAL, COMPANY;
+
+        @Override
+        public String toString() {
+            return name(); // 무조건 대문자 반환
+        }
     }
 }
