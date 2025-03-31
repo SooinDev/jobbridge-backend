@@ -20,6 +20,10 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("이메일이 존재하지 않습니다."));
 
+        if (!user.isVerified()) {
+            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+        }
+
         if (!passwordEncoder.matches(request.getPw(), user.getPw())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
@@ -36,6 +40,7 @@ public class UserService {
 
         // userType을 ENUM으로 변환
         User.UserType userType = User.UserType.valueOf(request.getUserType().toUpperCase());
+        System.out.println("최종 userType: " + userType.name());
 
         // 인증 토큰 생성
         String verificationToken = emailService.generateVerificationToken();
