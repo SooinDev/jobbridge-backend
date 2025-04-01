@@ -38,11 +38,14 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserType userType;
 
-    @Column(name = "verification_token")
-    private String verificationToken;  // 인증 토큰 저장
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "verification_code_created_at")
+    private LocalDateTime verificationCodeCreatedAt; // 생성 시각 (선택)
 
     @Column(name = "verified")
-    private boolean verified = false;  // 이메일 인증 상태 (기본값은 false)
+    private boolean verified = false;   // 이메일 인증 상태 (기본값은 false)
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -50,7 +53,13 @@ public class User {
     @PrePersist
     public void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now(); // 현재 시간 자동 입력
+            createdAt = LocalDateTime.now();
+        }
+
+        // 인증 코드가 존재하고 생성 시간이 설정되지 않았다면,
+        // 인증 코드가 처음 생성된 시점을 현재 시간으로 기록
+        if (verificationCodeCreatedAt == null && verificationCode != null) {
+            verificationCodeCreatedAt = LocalDateTime.now();
         }
     }
 
