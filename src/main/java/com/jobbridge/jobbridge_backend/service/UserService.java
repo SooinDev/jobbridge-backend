@@ -15,6 +15,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;  // 이메일 발송 서비스 추가
+    private final EmailVerificationService emailVerificationService;
 
     public void login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -30,9 +31,14 @@ public class UserService {
     }
 
     public void signup(SignupRequest request) {
-        // 이미 존재하는 이메일인지 확인
+        // 이미 가입된 이메일인지 확인
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        }
+
+        // ✅ 이메일 인증 여부 확인
+        if (!emailVerificationService.isEmailVerified(request.getEmail())) {
+            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
         }
 
         // 비밀번호 암호화
@@ -40,12 +46,8 @@ public class UserService {
 
         // userType을 ENUM으로 변환
         User.UserType userType = User.UserType.valueOf(request.getUserType().toUpperCase());
-        System.out.println("최종 userType: " + userType.name());
 
-        // 인증 토큰 생성
-        String verificationToken = emailService.generateVerificationToken();
-
-        // 유저 생성 및 저장
+        // 유저 생성
         User user = User.builder()
                 .pw(encodedPw)
                 .name(request.getName())
@@ -53,14 +55,10 @@ public class UserService {
                 .age(request.getAge())
                 .email(request.getEmail())
                 .phonenumber(request.getPhonenumber())
-                .userType(userType)  // userType 설정
-                .verificationToken(verificationToken) // 인증 토큰 저장
-                .verified(false)  // 초기 상태는 인증되지 않음
+                .userType(userType)
+                .verified(true) // 이메일 인증은 이미 완료된 상태
                 .build();
 
         userRepository.save(user);
-
-        // 인증 이메일 발송
-        emailService.sendVerificationEmail(request.getEmail(), verificationToken);
     }
 }
