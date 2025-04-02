@@ -36,10 +36,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/login", "/api/user/signup", "/api/user/send-code", "/api/user/verify").permitAll()
                         .requestMatchers("/api/resume/**").hasAuthority("ROLE_INDIVIDUAL")
-                        .requestMatchers("/api/job-posting/**").hasAuthority("ROLE_COMPANY")
+                        // 채용공고 접근 권한 수정 - 조회는 모두 허용, 등록/수정/삭제는 COMPANY만 허용
+                        .requestMatchers("/api/job-posting/my", "/api/job-posting/{id}").authenticated()
+                        .requestMatchers("/api/job-posting", "/api/job-posting/{id}").hasAuthority("ROLE_COMPANY")
+                        // 채용공고 검색 API 접근 허용
+                        .requestMatchers("/api/jobs/**").permitAll()
                         .anyRequest().authenticated()
                 );
-=======
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
