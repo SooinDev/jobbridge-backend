@@ -11,4 +11,12 @@ CREATE TABLE user (
                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE email_verification (
+                                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                    code VARCHAR(255),
+                                    created_at DATETIME(6),
+                                    email VARCHAR(255),
+                                    verified BIT(1)
+);
+
 TRUNCATE TABLE jobbridge.user;
