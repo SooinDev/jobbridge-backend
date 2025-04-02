@@ -1,6 +1,7 @@
 package com.jobbridge.jobbridge_backend.controller;
 
 import com.jobbridge.jobbridge_backend.dto.*;
+=======
 import com.jobbridge.jobbridge_backend.entity.User;
 import com.jobbridge.jobbridge_backend.repository.UserRepository;
 import com.jobbridge.jobbridge_backend.security.JwtTokenProvider;
@@ -24,13 +25,16 @@ public class UserController {
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final EmailService emailService;
+
     private final JwtTokenProvider jwtTokenProvider; // 추가: JwtTokenProvider 주입
+=======
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             // 로그인 시 사용자 정보 반환
             User user = userService.loginAndGetUser(request);
+            String token = jwtUtil.generateToken(user.getEmail());
 
             // JWT 토큰 생성
             String token = jwtTokenProvider.generateToken(user.getEmail());
@@ -42,6 +46,7 @@ public class UserController {
                     .email(user.getEmail())
                     .userType(user.getUserType().toString())
                     .build();
+
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
