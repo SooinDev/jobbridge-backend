@@ -1,12 +1,10 @@
 package com.jobbridge.jobbridge_backend.controller;
 
-import com.jobbridge.jobbridge_backend.jwt.JwtUtil;
-import com.jobbridge.jobbridge_backend.dto.EmailRequest;
-import com.jobbridge.jobbridge_backend.dto.LoginRequest;
-import com.jobbridge.jobbridge_backend.dto.SignupRequest;
-import com.jobbridge.jobbridge_backend.dto.VerificationRequest;
+import com.jobbridge.jobbridge_backend.dto.*;
+=======
 import com.jobbridge.jobbridge_backend.entity.User;
 import com.jobbridge.jobbridge_backend.repository.UserRepository;
+import com.jobbridge.jobbridge_backend.security.JwtTokenProvider;
 import com.jobbridge.jobbridge_backend.service.EmailService;
 import com.jobbridge.jobbridge_backend.service.UserService;
 import com.jobbridge.jobbridge_backend.service.EmailVerificationService;
@@ -27,7 +25,9 @@ public class UserController {
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private final JwtUtil jwtUtil; // 👈 추가됨
+
+    private final JwtTokenProvider jwtTokenProvider; // 추가: JwtTokenProvider 주입
+=======
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -36,17 +36,21 @@ public class UserController {
             User user = userService.loginAndGetUser(request);
             String token = jwtUtil.generateToken(user.getEmail());
 
+            // JWT 토큰 생성
+            String token = jwtTokenProvider.generateToken(user.getEmail());
+
             // 응답 데이터 구성
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "로그인 성공!");
-            response.put("token", token);
-            response.put("name", user.getName());
-            response.put("email", user.getEmail());
-            response.put("userType", user.getUserType().toString());
+            LoginResponse response = LoginResponse.builder()
+                    .token(token)
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .userType(user.getUserType().toString())
+                    .build();
+
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
