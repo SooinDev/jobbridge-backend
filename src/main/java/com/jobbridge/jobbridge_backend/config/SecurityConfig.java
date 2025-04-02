@@ -1,5 +1,6 @@
 package com.jobbridge.jobbridge_backend.config;
 
+
 import com.jobbridge.jobbridge_backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/job-posting/**").hasAuthority("ROLE_COMPANY")
                         .anyRequest().authenticated()
                 );
+=======
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
