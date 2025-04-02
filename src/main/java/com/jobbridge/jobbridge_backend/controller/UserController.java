@@ -1,5 +1,6 @@
 package com.jobbridge.jobbridge_backend.controller;
 
+import com.jobbridge.jobbridge_backend.jwt.JwtUtil;
 import com.jobbridge.jobbridge_backend.dto.EmailRequest;
 import com.jobbridge.jobbridge_backend.dto.LoginRequest;
 import com.jobbridge.jobbridge_backend.dto.SignupRequest;
@@ -26,16 +27,19 @@ public class UserController {
     private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final JwtUtil jwtUtil; // 👈 추가됨
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             // 로그인 시 사용자 정보 반환
             User user = userService.loginAndGetUser(request);
+            String token = jwtUtil.generateToken(user.getEmail());
 
             // 응답 데이터 구성
             Map<String, Object> response = new HashMap<>();
             response.put("message", "로그인 성공!");
+            response.put("token", token);
             response.put("name", user.getName());
             response.put("email", user.getEmail());
             response.put("userType", user.getUserType().toString());
