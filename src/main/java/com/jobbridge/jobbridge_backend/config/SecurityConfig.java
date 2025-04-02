@@ -43,7 +43,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/jobs/**").permitAll()
                         .anyRequest().authenticated()
                 );
-=======
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
