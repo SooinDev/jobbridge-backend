@@ -32,6 +32,7 @@ public class JobPostingDto {
         private String salary;
         private String deadline;
         private String companyName;
+        private String companyEmail; // 추가: 회사 이메일 정보
         private String createdAt;
     }
 }

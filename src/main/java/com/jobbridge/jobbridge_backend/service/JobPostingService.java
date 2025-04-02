@@ -114,6 +114,7 @@ public class JobPostingService {
         }
 
         response.setCompanyName(jobPosting.getCompany().getName());
+        response.setCompanyEmail(jobPosting.getCompany().getEmail()); // 회사 이메일 추가
         response.setCreatedAt(jobPosting.getCreatedAt().format(formatter));
         return response;
     }
