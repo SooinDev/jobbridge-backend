@@ -79,7 +79,7 @@ CREATE TABLE job_bookmark (
                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                               FOREIGN KEY (job_posting_id) REFERENCES job_posting(id),
                               FOREIGN KEY (user_id) REFERENCES user(id),
-                              UNIQUE KEY unique_user_job (user_id, job_posting_id)
+                              UNIQUE KEY unique_user_job (user_id, job_p osting_id)
 );
 
 -- 인덱스 추가
