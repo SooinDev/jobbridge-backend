@@ -84,3 +84,5 @@ CREATE TABLE job_bookmark (
 
 -- 인덱스 추가
 CREATE INDEX idx_bookmark_user_id ON job_bookmark(user_id);
+
+TRUNCATE TABLE jobbridge.user;
