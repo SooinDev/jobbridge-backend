@@ -1,7 +1,10 @@
 package com.jobbridge.jobbridge_backend.config;
 
 
+import com.jobbridge.jobbridge_backend.entity.User;
+import com.jobbridge.jobbridge_backend.repository.UserRepository;
 import com.jobbridge.jobbridge_backend.security.JwtAuthenticationFilter;
+import com.jobbridge.jobbridge_backend.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,8 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -41,6 +46,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/job-posting", "/api/job-posting/{id}").hasAuthority("ROLE_COMPANY")
                         // 채용공고 검색 API 접근 허용
                         .requestMatchers("/api/jobs/**").permitAll()
+
+                        // ✅ [추가] 지원하기 API는 로그인한 사용자만 허용
+                        .requestMatchers("/api/apply/**").authenticated()
+
                         .anyRequest().authenticated()
                 );
 
@@ -70,5 +79,14 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> {
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다."));
+            return new UserDetailsImpl(user);
+        };
     }
 }
