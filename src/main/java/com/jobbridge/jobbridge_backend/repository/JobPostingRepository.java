@@ -10,10 +10,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
+
     List<JobPosting> findByCompany(User company);
+
     List<JobPosting> findByCompanyOrderByCreatedAtDesc(User company);
 
-    // Basic search by keyword in title or description
+    List<JobPosting> findBySource(String source); // ✅ 사람인 API 구분용
+
     @Query("SELECT j FROM JobPosting j WHERE " +
             "(LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -22,7 +25,6 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
             "ORDER BY j.createdAt DESC")
     List<JobPosting> searchByKeyword(@Param("keyword") String keyword);
 
-    // Advanced search with multiple filters
     @Query("SELECT j FROM JobPosting j WHERE " +
             "(:keyword IS NULL OR " +
             "(LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -39,10 +41,8 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
             @Param("experienceLevel") String experienceLevel,
             @Param("deadlineAfter") LocalDateTime deadlineAfter);
 
-    // Find recent job postings
     List<JobPosting> findTop10ByOrderByCreatedAtDesc();
 
-    // Find jobs by specific skills
     @Query("SELECT j FROM JobPosting j WHERE " +
             "LOWER(j.requiredSkills) LIKE LOWER(CONCAT('%', :skill, '%')) " +
             "ORDER BY j.createdAt DESC")

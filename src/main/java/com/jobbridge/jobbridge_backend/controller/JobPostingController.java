@@ -1,6 +1,7 @@
 package com.jobbridge.jobbridge_backend.controller;
 
 import com.jobbridge.jobbridge_backend.dto.JobPostingDto;
+import com.jobbridge.jobbridge_backend.entity.JobPosting;
 import com.jobbridge.jobbridge_backend.security.JwtTokenProvider;
 import com.jobbridge.jobbridge_backend.service.JobPostingService;
 import lombok.RequiredArgsConstructor;
@@ -15,13 +16,12 @@ import java.util.List;
 public class JobPostingController {
 
     private final JobPostingService jobPostingService;
-    private final JwtTokenProvider jwtTokenProvider; // JwtTokenProvider 주입 필요
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping
     public ResponseEntity<JobPostingDto.Response> createJobPosting(
             @RequestHeader("Authorization") String authorization,
             @RequestBody JobPostingDto.Request request) {
-        // 토큰에서 이메일을 추출하는 로직 필요 (임시로 이메일을 직접 받는 것으로 대체)
         String email = getUserEmailFromToken(authorization);
         JobPostingDto.Response response = jobPostingService.createJobPosting(email, request);
         return ResponseEntity.ok(response);
@@ -60,7 +60,15 @@ public class JobPostingController {
         return ResponseEntity.ok().build();
     }
 
-    // JWT 토큰에서 이메일을 추출하는 메소드 (실제로는 JWT 라이브러리 사용)
+    // ✅ [추가] 전체 공고 조회 (source=SARAMIN 또는 전체)
+    @GetMapping("/all")
+    public ResponseEntity<List<JobPosting>> getAllJobPostings(@RequestParam(required = false) String source) {
+        if (source != null) {
+            return ResponseEntity.ok(jobPostingService.getFilteredJobPostings(source));
+        }
+        return ResponseEntity.ok(jobPostingService.getAllJobPostings());
+    }
+
     private String getUserEmailFromToken(String authorization) {
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String token = authorization.substring(7);
