@@ -13,6 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/job-posting")
+@CrossOrigin(origins = "http://localhost:5173")
 public class JobPostingController {
 
     private final JobPostingService jobPostingService;
@@ -58,15 +59,6 @@ public class JobPostingController {
         String email = getUserEmailFromToken(authorization);
         jobPostingService.deleteJobPosting(id, email);
         return ResponseEntity.ok().build();
-    }
-
-    // ✅ [추가] 전체 공고 조회 (source=SARAMIN 또는 전체)
-    @GetMapping("/all")
-    public ResponseEntity<List<JobPosting>> getAllJobPostings(@RequestParam(required = false) String source) {
-        if (source != null) {
-            return ResponseEntity.ok(jobPostingService.getFilteredJobPostings(source));
-        }
-        return ResponseEntity.ok(jobPostingService.getAllJobPostings());
     }
 
     private String getUserEmailFromToken(String authorization) {

@@ -45,14 +45,11 @@ public class JobPostingService {
         System.out.println("[DEBUG] API 호출 URL: " + url);
         try {
             String response = restTemplate.getForObject(url, String.class);
-            System.out.println("[DEBUG] 전체 API 응답: " + response);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(response);
             // 채용공고 데이터는 job-search > jobs > job 배열에 존재함
             JsonNode jobs = rootNode.path("jobs").path("job");
-            System.out.println("[DEBUG] 파싱된 jobs 노드: " + jobs.toString());
-            System.out.println("[DEBUG] jobs 노드 개수: " + jobs.size());
 
             List<JobPosting> postings = new ArrayList<>();
 
@@ -88,7 +85,6 @@ public class JobPostingService {
                     // 회사 정보: company.detail.name와 company.detail.href
                     String companyName = job.path("company").path("detail").path("name").asText();
                     String companyHref = job.path("company").path("detail").path("href").asText();
-                    System.out.println("[DEBUG] 회사 정보 - href: " + companyHref + ", name: " + companyName);
                     // 외부 데이터이므로 내부 DB 연동은 null 처리
                     User company = null;
 
@@ -124,6 +120,7 @@ public class JobPostingService {
             e.printStackTrace();
         }
     }
+
     private LocalDateTime parseDeadline(String expirationDateStr, DateTimeFormatter expirationFormatter, DateTimeFormatter simpleFormatter) {
         if (expirationDateStr == null || expirationDateStr.isBlank()) {
             System.out.println("[DEBUG] expiration-date 값이 비어 있습니다.");
@@ -230,6 +227,11 @@ public class JobPostingService {
         if (jobPosting.getCompany() != null) {
             response.setCompanyName(jobPosting.getCompany().getName());
             response.setCompanyEmail(jobPosting.getCompany().getEmail());
+        }
+        else {
+            // company가 null인 경우 (예: SARAMIN 공고), 기본 값 또는 별도 처리
+            response.setCompanyName(null);  // 또는 "외부공고" 등의 표시
+            response.setCompanyEmail(null);
         }
         response.setCreatedAt(jobPosting.getCreatedAt().format(formatter));
         return response;

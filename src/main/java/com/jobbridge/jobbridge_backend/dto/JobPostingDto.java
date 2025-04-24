@@ -35,4 +35,12 @@ public class JobPostingDto {
         private String companyEmail; // 추가: 회사 이메일 정보
         private String createdAt;
     }
+
+    @Getter @Setter
+    public static class MatchResponse {
+        private Long jobId;
+        private String title;
+        private String companyName;
+        private Double matchRate;
+    }
 }
