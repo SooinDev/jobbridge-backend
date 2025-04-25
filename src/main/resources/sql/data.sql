@@ -34,19 +34,21 @@ CREATE INDEX idx_resume_user_id ON resume(user_id);
 CREATE INDEX idx_resume_created_at ON resume(created_at);
 
 CREATE TABLE job_posting (
-                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                             title VARCHAR(255) NOT NULL,
-                             description TEXT,
-                             position VARCHAR(100) NOT NULL,
-                             required_skills VARCHAR(255),
-                             experience_level VARCHAR(100),
-                             location VARCHAR(255),
-                             salary VARCHAR(100),
-                             deadline TIMESTAMP,
-                             company_id BIGINT NOT NULL,
-                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                             FOREIGN KEY (company_id) REFERENCES user(id)
+                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                title VARCHAR(255) NOT NULL,
+                                description TEXT,
+                                position VARCHAR(100) NOT NULL,
+                                required_skills VARCHAR(255),
+                                experience_level VARCHAR(100),
+                                location VARCHAR(255),
+                                salary VARCHAR(100),
+                                deadline TIMESTAMP,
+                                company_id BIGINT, -- 사람인 데이터는 NULL 허용해야 하므로 NOT NULL 제거
+                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                source VARCHAR(20) NOT NULL DEFAULT 'USER', -- ✅ USER or SARAMIN
+                                url VARCHAR(255), -- ✅ 사람인 공고 URL
+                                FOREIGN KEY (company_id) REFERENCES user(id)
 );
 
 -- 인덱스 추가

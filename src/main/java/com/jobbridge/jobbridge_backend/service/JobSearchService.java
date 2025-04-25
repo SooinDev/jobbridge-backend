@@ -96,7 +96,17 @@ public class JobSearchService {
             response.setDeadline(jobPosting.getDeadline().format(formatter));
         }
 
-        response.setCompanyName(jobPosting.getCompany().getName());
+        // 4. 회사 정보 처리 (SARAMIN 공고는 company가 null이므로, 반드시 null 체크)
+        if (jobPosting.getCompany() != null) {
+            // USER가 등록한 공고일 때: 실제 User 엔티티에서 정보 가져오기
+            response.setCompanyName(jobPosting.getCompany().getName());
+            response.setCompanyEmail(jobPosting.getCompany().getEmail());
+        } else {
+            // SARAMIN 등 외부 API 공고일 때: 기본값 또는 빈 값 설정
+            response.setCompanyName("SARAMIN");    // 원하시는 기본 표시로 변경 가능
+            response.setCompanyEmail(null);     // 이메일은 없음
+        }
+
         response.setCreatedAt(jobPosting.getCreatedAt().format(formatter));
         return response;
     }
