@@ -57,3 +57,4 @@ cd jobbridge-backend
 
 # 애플리케이션 실행
 ./gradlew bootRun
+    
