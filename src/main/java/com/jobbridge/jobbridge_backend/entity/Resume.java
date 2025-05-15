@@ -43,4 +43,10 @@ public class Resume {
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    @Transient  // DB에 저장되지 않는 일시 필드
+    private Double matchRate;
+
+    public Double getMatchRate() { return matchRate; }
+    public void setMatchRate(Double matchRate) { this.matchRate = matchRate; }
 }
