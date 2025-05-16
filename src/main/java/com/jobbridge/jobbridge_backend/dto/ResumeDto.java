@@ -21,5 +21,6 @@ public class ResumeDto {
         private String userName;
         private String createdAt;
         private String updatedAt;
+        private Double matchRate;
     }
 }
