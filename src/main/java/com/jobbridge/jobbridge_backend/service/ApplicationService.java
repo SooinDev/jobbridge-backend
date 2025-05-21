@@ -41,16 +41,20 @@ public class ApplicationService {
                 .build();
         applicationRepository.save(application);
 
-        // 알림 저장
-        Notification notification = Notification.builder()
-                .senderId(applicant.getId())
-                .receiverId(job.getCompany().getId()) // 채용공고 올린 기업
-                .jobPostingId(job.getId())
-                .message(applicant.getName() + "님이 '" + job.getTitle() + "'에 지원했습니다.")
-                .isRead(false)
-                .createdAt(LocalDateTime.now())
-                .build();
-        notificationRepository.save(notification);
+        // 회사 정보가 있는 경우만 알림 생성
+        if (job.getCompany() != null) {
+            Notification notification = Notification.builder()
+                    .senderId(applicant.getId())
+                    .receiverId(job.getCompany().getId()) // 채용공고 올린 기업
+                    .jobPostingId(job.getId())
+                    .message(applicant.getName() + "님이 '" + job.getTitle() + "'에 지원했습니다.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationRepository.save(notification);
+        } else {
+            System.out.println("⚠️ 채용공고 ID " + jobPostingId + "에 회사 정보가 없어 알림을 생성하지 않습니다.");
+        }
     }
 
     // ✅ 내가 지원한 공고 내역 불러오기
@@ -58,11 +62,16 @@ public class ApplicationService {
         List<Application> applications = applicationRepository.findByApplicant(user);
 
         return applications.stream()
-                .map(app -> new MyApplicationDto(
-                        app.getJobPosting().getId(),
-                        app.getJobPosting().getTitle(),
-                        app.getJobPosting().getCompany().getName(),
-                        app.getAppliedAt()))
+                .map(app -> {
+                    JobPosting job = app.getJobPosting();
+                    String companyName = (job.getCompany() != null) ? job.getCompany().getName() : "외부 공고";
+
+                    return new MyApplicationDto(
+                            job.getId(),
+                            job.getTitle(),
+                            companyName,
+                            app.getAppliedAt());
+                })
                 .toList();
     }
 }

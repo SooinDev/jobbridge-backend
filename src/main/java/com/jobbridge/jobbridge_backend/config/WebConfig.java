@@ -14,7 +14,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // 모든 요청 경로에 대해
-                        .allowedOrigins("http://localhost:5173") // 프론트 도메인 허용
+                        .allowedOrigins("http://localhost:5173", "capacitor://localhost") // 프론트, ios 도메인 허용
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowCredentials(true)
                         .allowedHeaders("*");
