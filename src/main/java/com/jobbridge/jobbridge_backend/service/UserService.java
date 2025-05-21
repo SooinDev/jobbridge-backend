@@ -30,17 +30,17 @@ public class UserService {
         }
     }
 
-    // 로그인 시 사용자 정보 반환하는 메소드 추가
     public User loginAndGetUser(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("이메일이 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
 
         if (!user.isVerified()) {
             throw new IllegalArgumentException("이메일 인증이 필요합니다.");
         }
 
         if (!passwordEncoder.matches(request.getPw(), user.getPw())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            // 비밀번호가 일치하지 않을 때도 동일한 오류 메시지 사용 (보안상의 이유)
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
 
         return user;
