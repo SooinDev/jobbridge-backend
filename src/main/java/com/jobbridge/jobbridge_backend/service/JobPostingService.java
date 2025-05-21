@@ -92,17 +92,17 @@ public class JobPostingService {
                     String jobUrl = job.path("url").asText();
 
                     // JobPosting 객체 생성 및 추가
+                    // JobPostingService.java에서 사람인 API 데이터 처리 시
                     JobPosting posting = JobPosting.builder()
                             .title(title)
                             .description("사람인에서 수집된 채용 공고입니다.")
-                            // position 필드에 공고 제목(또는 직무명)을 저장
                             .position(title)
                             .requiredSkills(requiredSkills)
                             .experienceLevel(experienceLevel)
                             .location(location)
                             .salary(salary)
                             .deadline(deadline)
-                            .company(company)
+                            .company(null)  // 외부 공고는 회사 정보가 없음
                             .source("SARAMIN")
                             .url(jobUrl)
                             .build();

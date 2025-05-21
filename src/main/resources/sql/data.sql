@@ -81,8 +81,18 @@ CREATE TABLE job_bookmark (
                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                               FOREIGN KEY (job_posting_id) REFERENCES job_posting(id),
                               FOREIGN KEY (user_id) REFERENCES user(id),
-                              UNIQUE KEY unique_user_job (user_id, job_p osting_id)
+                              UNIQUE KEY unique_user_job (user_id, job_posting_id)
 );
 
 -- 인덱스 추가
 CREATE INDEX idx_bookmark_user_id ON job_bookmark(user_id);
+
+-- data.sql에 추가
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                            token VARCHAR(255) NOT NULL UNIQUE,
+                            email VARCHAR(255) NOT NULL,
+                            expiry_date TIMESTAMP NOT NULL
+);
+
+TRUNCATE TABLE jobbridge.user;

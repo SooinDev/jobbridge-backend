@@ -39,20 +39,34 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/login", "/api/user/signup", "/api/user/send-code", "/api/user/verify").permitAll()
+                        // 인증이 필요 없는 공개 API 엔드포인트
+                        .requestMatchers(
+                                "/api/user/login",
+                                "/api/user/signup",
+                                "/api/user/send-code",
+                                "/api/user/verify",
+                                // 비밀번호 재설정 API 엔드포인트 추가
+                                "/api/user/password-reset",
+                                "/api/user/password-reset/confirm"
+                        ).permitAll()
+
                         .requestMatchers("/api/resume/**").hasAuthority("ROLE_INDIVIDUAL")
+
                         // 채용공고 접근 권한 수정 - 조회는 모두 허용, 등록/수정/삭제는 COMPANY만 허용
                         .requestMatchers("/api/job-posting/my", "/api/job-posting/{id}").authenticated()
                         .requestMatchers("/api/job-posting", "/api/job-posting/{id}").hasAuthority("ROLE_COMPANY")
+
                         // 채용공고 검색 API 접근 허용
                         .requestMatchers("/api/jobs/**").permitAll()
 
                         // ✅ [추가] 지원하기 API는 로그인한 사용자만 허용
                         .requestMatchers("/api/apply/**").authenticated()
 
+                        // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 );
 
+        // JWT 인증 필터 추가
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

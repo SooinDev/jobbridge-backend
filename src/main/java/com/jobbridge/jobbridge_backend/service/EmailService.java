@@ -44,4 +44,13 @@ public class EmailService {
         int code = (int)(Math.random() * 900000) + 100000; // 100000~999999
         return String.valueOf(code);
     }
+
+    // EmailService.java에 추가할 메서드
+    public void sendEmail(String toEmail, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject(subject);
+        message.setText(body);
+        emailSender.send(message);
+    }
 }
