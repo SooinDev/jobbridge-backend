@@ -1,6 +1,5 @@
 package com.jobbridge.jobbridge_backend.service;
 
-import com.jobbridge.jobbridge_backend.dto.MatchDto;
 import com.jobbridge.jobbridge_backend.dto.JobDto;
 import com.jobbridge.jobbridge_backend.entity.JobPosting;
 import com.jobbridge.jobbridge_backend.entity.Resume;
@@ -8,12 +7,13 @@ import com.jobbridge.jobbridge_backend.repository.JobPostingRepository;
 import com.jobbridge.jobbridge_backend.repository.ResumeRepository;
 import com.jobbridge.jobbridge_backend.util.AiHttpClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobMatchService {
@@ -29,49 +29,40 @@ public class JobMatchService {
         // 1) 이력서 조회
         Resume resume = resumeRepository.findById(resumeId)
                 .orElseThrow(() -> new NoSuchElementException("Resume not found: " + resumeId));
-        String resumeContent = resume.getContent();  // 이력서 내용
+        String resumeContent = resume.getContent();
 
-        // 2) 채용공고 전체 조회
+        // 2) 전체 채용공고 조회
         List<JobPosting> allJobs = jobPostingRepository.findAll();
         if (allJobs.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 3) AI 요청용 MatchDto 구성
-        List<MatchDto.Item> items = allJobs.stream()
-                .map(job -> new MatchDto.Item(job.getId(), job.getDescription()))
-                .collect(Collectors.toList());
-        // (필요 시 요청 DTO 생성; AiHttpClient 내부에서 리스트만 사용하기도 함)
-        // MatchDto requestDto = new MatchDto(resumeContent, items);
-
-        // 4) AI 서버 호출: 'resume' 파라미터로 이력서 내용, 'jobContents'로 공고 설명 리스트, 'job_ids'로 공고 ID 리스트 전달
-        List<String> jobContents = new ArrayList<>();
-        List<String> getDescription = allJobs.stream()
-                .map(JobPosting::getDescription)
+        // 3) jobContents: 각 채용공고의 position, skills, description을 하나의 텍스트로 묶기
+        List<String> jobContents = allJobs.stream()
+                .map(job -> String.join("\n",
+                        "채용포지션: " + job.getPosition(),
+                        "요구역량: " + job.getRequiredSkills(),
+                        "상세내용: " + job.getDescription()
+                ))
                 .collect(Collectors.toList());
 
-        List<String> getPosition = allJobs.stream()
-                .map(JobPosting::getPosition)
-                .collect(Collectors.toList());
-
-        List<String> required_skills = allJobs.stream()
-                .map(JobPosting::getRequiredSkills)
-                .collect(Collectors.toList());
-
-        jobContents.addAll(getDescription);
-        jobContents.addAll(getPosition);
-        jobContents.addAll(required_skills);
-
+        // 4) jobIds 추출
         List<Long> jobIds = allJobs.stream()
                 .map(JobPosting::getId)
                 .collect(Collectors.toList());
+
+        // 🔍 로그로 요청 크기 확인
+        log.info("매칭 요청: resume.length={}, jobIds.size={}, jobContents.size={}",
+                resumeContent.length(), jobIds.size(), jobContents.size());
+
+        // 5) AI 서버 호출
         List<Map<String, Object>> responses = aiHttpClient.getMatches(
                 resumeContent,
                 jobContents,
                 jobIds
         );
 
-        // 5) 유사도(score) 내림차순 정렬 후 상위 5개 선택
+        // 6) 점수 기준 정렬 후 상위 5개 추출
         List<Map<String, Object>> top5 = responses.stream()
                 .sorted((a, b) -> Double.compare(
                         ((Number) b.get("score")).doubleValue(),
@@ -80,7 +71,7 @@ public class JobMatchService {
                 .limit(5)
                 .collect(Collectors.toList());
 
-        // 6) JobPosting 엔티티에 matchRate 주입 및 결과 리스트 구성
+        // 7) 결과 조립
         Map<Long, JobPosting> jobMap = allJobs.stream()
                 .collect(Collectors.toMap(JobPosting::getId, job -> job));
 
@@ -95,7 +86,6 @@ public class JobMatchService {
                 dto.setId(job.getId());
                 dto.setTitle(job.getTitle());
                 dto.setDescription(job.getDescription());
-                // 생성/수정일자를 문자열로 변환
                 dto.setCreatedAt(job.getCreatedAt().toString());
                 dto.setUpdatedAt(job.getUpdatedAt().toString());
                 dto.setMatchRate(matchRate);
