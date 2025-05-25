@@ -50,7 +50,7 @@ public class JobSearchController {
         return ResponseEntity.ok(recentJobs);
     }
 
-    // ✅ 새로 추가: 모든 채용공고 조회
+    // 새로 추가: 모든 채용공고 조회
     @GetMapping("/all")
     public ResponseEntity<List<JobPostingDto.Response>> getAllJobs(
             @RequestParam(defaultValue = "0") int page,
