@@ -51,6 +51,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/api/resume/**").hasAuthority("ROLE_INDIVIDUAL")
+                        .requestMatchers("/api/match/**").hasAuthority("ROLE_INDIVIDUAL")
 
                         // 채용공고 접근 권한 수정 - 조회는 모두 허용, 등록/수정/삭제는 COMPANY만 허용
                         .requestMatchers("/api/job-posting/my", "/api/job-posting/{id}").authenticated()
@@ -59,7 +60,7 @@ public class SecurityConfig {
                         // 채용공고 검색 API 접근 허용
                         .requestMatchers("/api/jobs/**").permitAll()
 
-                        // ✅ [추가] 지원하기 API는 로그인한 사용자만 허용
+                        // [추가] 지원하기 API는 로그인한 사용자만 허용
                         .requestMatchers("/api/apply/**").authenticated()
 
                         // 기타 모든 요청은 인증 필요
