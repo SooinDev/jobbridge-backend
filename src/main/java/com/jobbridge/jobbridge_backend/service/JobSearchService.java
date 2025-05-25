@@ -5,6 +5,10 @@ import com.jobbridge.jobbridge_backend.dto.JobSearchDto;
 import com.jobbridge.jobbridge_backend.entity.JobPosting;
 import com.jobbridge.jobbridge_backend.repository.JobPostingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +67,30 @@ public class JobSearchService {
                 .collect(Collectors.toList());
     }
 
+    // 새로 추가: 모든 채용공고 조회 (페이징 지원)
+    @Transactional(readOnly = true)
+    public List<JobPostingDto.Response> getAllJobs(int page, int size, String sortBy, String sortDir) {
+        // 정렬 방향 설정
+        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+
+        // 페이징 및 정렬 설정
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // 모든 채용공고 조회
+        Page<JobPosting> jobPage = jobPostingRepository.findAll(pageable);
+
+        return jobPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    // ✅ 새로 추가: 전체 채용공고 개수 조회
+    @Transactional(readOnly = true)
+    public long getTotalJobCount() {
+        return jobPostingRepository.count();
+    }
+
     @Transactional(readOnly = true)
     public List<JobPostingDto.Response> searchBySkill(String skill) {
         List<JobPosting> results = jobPostingRepository.findBySkill(skill);
@@ -96,7 +124,7 @@ public class JobSearchService {
             response.setDeadline(jobPosting.getDeadline().format(formatter));
         }
 
-        // 4. 회사 정보 처리 (SARAMIN 공고는 company가 null이므로, 반드시 null 체크)
+        // 회사 정보 처리 (SARAMIN 공고는 company가 null이므로, 반드시 null 체크)
         if (jobPosting.getCompany() != null) {
             // USER가 등록한 공고일 때: 실제 User 엔티티에서 정보 가져오기
             response.setCompanyName(jobPosting.getCompany().getName());

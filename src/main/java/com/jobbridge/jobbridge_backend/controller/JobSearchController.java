@@ -50,6 +50,18 @@ public class JobSearchController {
         return ResponseEntity.ok(recentJobs);
     }
 
+    // 새로 추가: 모든 채용공고 조회
+    @GetMapping("/all")
+    public ResponseEntity<List<JobPostingDto.Response>> getAllJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        List<JobPostingDto.Response> allJobs = jobSearchService.getAllJobs(page, size, sortBy, sortDir);
+        return ResponseEntity.ok(allJobs);
+    }
+
     @GetMapping("/skill/{skill}")
     public ResponseEntity<List<JobPostingDto.Response>> searchBySkill(
             @PathVariable String skill) {
