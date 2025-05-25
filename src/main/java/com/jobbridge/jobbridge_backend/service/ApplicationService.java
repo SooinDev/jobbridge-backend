@@ -23,6 +23,22 @@ public class ApplicationService {
     private final JobPostingRepository jobPostingRepository;
     private final NotificationRepository notificationRepository;
 
+    // ✅ 새로 추가: 특정 사용자가 특정 채용공고에 지원했는지 확인
+    public boolean hasUserAppliedToJob(User user, Long jobPostingId) {
+        // 1. 채용공고 존재 여부 확인
+        JobPosting jobPosting = jobPostingRepository.findById(jobPostingId)
+                .orElseThrow(() -> new IllegalArgumentException("채용공고를 찾을 수 없습니다. ID: " + jobPostingId));
+
+        // 2. 지원 여부 확인
+        boolean hasApplied = applicationRepository.existsByApplicantAndJobPosting(user, jobPosting);
+
+        System.out.println("🔍 지원 여부 확인 - 사용자: " + user.getEmail() +
+                ", 채용공고: " + jobPosting.getTitle() +
+                ", 결과: " + hasApplied);
+
+        return hasApplied;
+    }
+
     @Transactional
     public void applyToJob(User applicant, Long jobPostingId) {
         JobPosting job = jobPostingRepository.findById(jobPostingId)

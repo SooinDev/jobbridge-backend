@@ -45,7 +45,7 @@ public class SecurityConfig {
                                 "/api/user/signup",
                                 "/api/user/send-code",
                                 "/api/user/verify",
-                                // 비밀번호 재설정 API 엔드포인트 추가
+                                // 비밀번호 재설정 API 엔드포인트
                                 "/api/user/password-reset",
                                 "/api/user/password-reset/confirm"
                         ).permitAll()
@@ -60,8 +60,13 @@ public class SecurityConfig {
                         // 채용공고 검색 API 접근 허용
                         .requestMatchers("/api/jobs/**").permitAll()
 
-                        // [추가] 지원하기 API는 로그인한 사용자만 허용
-                        .requestMatchers("/api/apply/**").authenticated()
+                        // 지원 관련 API - 개인 회원만 허용
+                        .requestMatchers("/api/apply/**").hasAuthority("ROLE_INDIVIDUAL")
+                        .requestMatchers("/api/applications/check/**").hasAuthority("ROLE_INDIVIDUAL")
+                        .requestMatchers("/api/applications/mine").hasAuthority("ROLE_INDIVIDUAL")
+
+                        // 테스트용 API (개발 환경에서만 사용)
+                        .requestMatchers("/api/applications/all").permitAll()
 
                         // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
