@@ -9,5 +9,9 @@ import java.util.List;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     boolean existsByApplicantAndJobPosting(User applicant, JobPosting jobPosting);
+
+    List<Application> findByJobPostingId(Long jobPostingId);
+    List<Application> findByJobPosting_Company(User company);
+
     List<Application> findByApplicant(User user);
 }
