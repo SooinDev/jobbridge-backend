@@ -131,7 +131,7 @@ public class JobSearchService {
             response.setCompanyEmail(jobPosting.getCompany().getEmail());
         } else {
             // SARAMIN 등 외부 API 공고일 때: 기본값 또는 빈 값 설정
-            response.setCompanyName("SARAMIN");    // 원하시는 기본 표시로 변경 가능
+            response.setCompanyName("wanted");    // 원하시는 기본 표시로 변경 가능
             response.setCompanyEmail(null);     // 이메일은 없음
         }
 

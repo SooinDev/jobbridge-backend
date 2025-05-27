@@ -17,12 +17,16 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+// Apache POI imports
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -33,107 +37,150 @@ public class JobPostingService {
     private final RestTemplate restTemplate = new RestTemplate();
     // DTO 응답 시 사용할 날짜 포맷 (예: "2025-04-16 19:20")
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final Pattern JSON_LD_PATTERN =
+            Pattern.compile("<script type=\"application/ld\\+json\">(.*?)</script>", Pattern.DOTALL);
 
-    @Value("${saramin.api.key}")
-    private String apiKey;
+    @Transactional
+    @Scheduled(initialDelay = 0, fixedRate = 1_800_000)
+    public void fetchJobPostingsFromWanted() {
+        // 1) DB에 이미 저장된 Wanted 공고 URL 집합 조회
+        List<JobPosting> storedJobs = jobPostingRepository.findAll();
+        Set<String> existingUrls = storedJobs.stream().map(JobPosting::getUrl).collect(Collectors.toSet());
 
-    @Scheduled(initialDelay = 0, fixedRate = 1800000)
-    public void fetchJobPostingsFromSaramin() {
-        // 필수: access-key, keywords, 반환 필드(posting-date, expiration-date) 지정
-        String url = "https://oapi.saramin.co.kr/job-search?access-key=" + apiKey
-                + "&count=110&keywords=개발자&fields=posting-date,expiration-date";
-        System.out.println("[DEBUG] API 호출 URL: " + url);
-        try {
-            String response = restTemplate.getForObject(url, String.class);
+        // 2) ID 범위 하드코딩 (283223 ~ 283323)
+        for (int id = 283223; id <= 283323; id++) {
+            String url = "https://www.wanted.co.kr/wd/" + id;
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode rootNode = mapper.readTree(response);
-            // 채용공고 데이터는 job-search > jobs > job 배열에 존재함
-            JsonNode jobs = rootNode.path("jobs").path("job");
-
-            List<JobPosting> postings = new ArrayList<>();
-
-            // 마감일은 ISO 오프셋 형식을 사용: "yyyy-MM-dd'T'HH:mm:ssZ"
-            DateTimeFormatter expirationFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
-            // 단순 날짜 형식(예: "yyyy-MM-dd")도 대비
-            DateTimeFormatter simpleFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-            for (JsonNode job : jobs) {
-                try {
-                    // 마감일 파싱: expiration-date
-                    String expirationDateStr = job.path("expiration-date").asText();
-                    LocalDateTime deadline = parseDeadline(expirationDateStr, expirationFormatter, simpleFormatter);
-
-                    // 공고 제목 및 직무명: position.title
-                    String title = job.path("position").path("title").asText();
-
-                    // 필요 기술: keyword (쉼표로 구분된 문자열)
-                    String requiredSkills = job.path("keyword").asText();
-
-                    // 연봉: salary.name; 값이 없으면 salary 필드 그대로 사용
-                    String salary = job.path("salary").path("name").asText();
-                    if (salary == null || salary.isBlank()) {
-                        salary = job.path("salary").asText("");
-                    }
-
-                    // 경력 수준: position.experience-level.name
-                    String experienceLevel = job.path("position").path("experience-level").path("name").asText();
-
-                    // 근무지: position.location.name
-                    String location = job.path("position").path("location").path("name").asText();
-
-                    // 회사 정보: company.detail.name와 company.detail.href
-                    String companyName = job.path("company").path("detail").path("name").asText();
-                    String companyHref = job.path("company").path("detail").path("href").asText();
-                    // 외부 데이터이므로 내부 DB 연동은 null 처리
-                    User company = null;
-
-                    // 채용 공고 URL
-                    String jobUrl = job.path("url").asText();
-
-                    // JobPosting 객체 생성 및 추가
-                    // JobPostingService.java에서 사람인 API 데이터 처리 시
-                    JobPosting posting = JobPosting.builder()
-                            .title(title)
-                            .description("사람인에서 수집된 채용 공고입니다.")
-                            .position(title)
-                            .requiredSkills(requiredSkills)
-                            .experienceLevel(experienceLevel)
-                            .location(location)
-                            .salary(salary)
-                            .deadline(deadline)
-                            .company(null)  // 외부 공고는 회사 정보가 없음
-                            .source("SARAMIN")
-                            .url(jobUrl)
-                            .build();
-
-                    postings.add(posting);
-                } catch (Exception innerEx) {
-                    System.out.println("[DEBUG] 개별 공고 처리 중 오류 발생");
-                    innerEx.printStackTrace();
-                }
+            // 3) 중복 URL 스킵
+            if (existingUrls.contains(url)) {
+                System.out.println("[스킵] 이미 존재하는 URL: " + url);
+                continue;
             }
-            System.out.println("[DEBUG] 총 파싱된 공고 수: " + postings.size());
-            jobPostingRepository.saveAll(postings);
-            System.out.println("[DEBUG] jobPostingRepository.saveAll 실행 완료");
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            try {
+                // 4) HTML 요청
+                String html = restTemplate.getForObject(url, String.class);
+
+                // 5) JSON-LD 스크립트 블록 추출
+                Matcher matcher = JSON_LD_PATTERN.matcher(html);
+                JsonNode jobNode = null;
+                ObjectMapper mapper = new ObjectMapper();
+                while (matcher.find()) {
+                    String jsonText = matcher.group(1);
+                    JsonNode root = mapper.readTree(jsonText);
+                    if ("JobPosting".equals(root.path("@type").asText())) {
+                        jobNode = root;
+                        break;
+                    }
+                }
+                if (jobNode == null) {
+                    System.out.println("[스킵] JobPosting 데이터 없음: " + url);
+                    continue;
+                }
+
+                // 6) JSON-LD에서 필드 추출
+                String company = jobNode.path("hiringOrganization").path("name").asText("");
+                String position = jobNode.path("title").asText("");
+                String title = (company + " " + position).trim();
+                String description = jobNode.path("description").asText("");
+
+                // 경력 요건
+                JsonNode expNode = jobNode.path("experienceRequirements");
+                String experienceLevel;
+                if (expNode.isArray()) {
+                    List<String> exps = new ArrayList<>();
+                    expNode.forEach(e -> exps.add(e.asText()));
+                    experienceLevel = String.join(", ", exps);
+                } else {
+                    experienceLevel = expNode.asText("");
+                }
+
+                // 근무 지역
+                JsonNode addr = jobNode.path("jobLocation").path("address");
+                String location = "";
+                if (!addr.isMissingNode()) {
+                    String region   = addr.path("addressRegion").asText("");
+                    String locality = addr.path("addressLocality").asText("");
+                    location = (region + " " + locality).trim();
+                }
+
+                // 필요 역량
+                JsonNode occNode = jobNode.path("occupationalCategory");
+                String requiredSkills;
+                if (occNode.isArray()) {
+                    List<String> occs = new ArrayList<>();
+                    occNode.forEach(o -> occs.add(o.asText()));
+                    requiredSkills = String.join(", ", occs);
+                } else {
+                    requiredSkills = occNode.asText("");
+                }
+
+                // 연봉
+                JsonNode salaryNode = jobNode.path("baseSalary").path("value");
+                String salary = "";
+                if (!salaryNode.isMissingNode()) {
+                    double minv = salaryNode.path("minValue").asDouble(0);
+                    double maxv = salaryNode.path("maxValue").asDouble(0);
+                    String unit = salaryNode.path("unitText").asText("");
+                    if (minv > 0 || maxv > 0) {
+                        salary = (minv != maxv)
+                                ? String.format("%.0f-%.0f %s", minv, maxv, unit).trim()
+                                : String.format("%.0f %s", minv, unit).trim();
+                    }
+                }
+
+                // 마감일 파싱 (시간 포함/미포함 모두 처리)
+                String deadlineStr = jobNode.path("validThrough").asText("").trim();
+                LocalDateTime deadline = null;
+                if (!deadlineStr.isBlank()) {
+                    try {
+                        deadline = LocalDateTime.parse(deadlineStr, DateTimeFormatter.ISO_DATE_TIME);
+                    } catch (DateTimeParseException ex) {
+                        LocalDate date = LocalDate.parse(deadlineStr, DateTimeFormatter.ISO_DATE);
+                        deadline = date.atStartOfDay();
+                    }
+                }
+
+                // company_id 추출
+                String companyIdStr = jobNode.path("identifier").path("propertyID").asText("").trim();
+                Long companyId = null;
+                if (!companyIdStr.isBlank()) {
+                    try {
+                        companyId = Long.valueOf(companyIdStr);
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // 7) 엔티티 매핑 및 저장
+                JobPosting job = new JobPosting();
+                job.setUrl(url);
+                job.setTitle(title);
+                job.setDescription(description);
+                job.setPosition(position);
+                job.setRequiredSkills(requiredSkills);
+                job.setExperienceLevel(experienceLevel);
+                job.setLocation(location);
+                job.setSalary(salary);
+                job.setSource("wanted");
+                if (deadline != null) job.setDeadline(deadline);
+                job.setCreatedAt(LocalDateTime.now());
+                job.setUpdatedAt(LocalDateTime.now());
+
+
+                jobPostingRepository.save(job);
+                System.out.println("[DB 저장] URL=" + url + " / title=" + title);
+
+                // 저장 후 URL 집합에 추가하여 동일 세션 내 중복 방지
+                existingUrls.add(url);
+
+            } catch (Exception e) {
+                System.out.println("[에러] " + url + " → " + e.getMessage());
+            }
+
+            // 1초 대기 (서버 부하 경감)
+            try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
         }
     }
 
-    private LocalDateTime parseDeadline(String expirationDateStr, DateTimeFormatter expirationFormatter, DateTimeFormatter simpleFormatter) {
-        if (expirationDateStr == null || expirationDateStr.isBlank()) {
-            System.out.println("[DEBUG] expiration-date 값이 비어 있습니다.");
-            return null;
-        }
-        try {
-            // "yyyy-MM-dd'T'HH:mm:ssZ" 형식으로 파싱 후 OffsetDateTime에서 LocalDateTime 추출
-            return OffsetDateTime.parse(expirationDateStr, expirationFormatter).toLocalDateTime();
-        } catch (Exception ex) {
-            // 위 형식으로 파싱되지 않으면, "yyyy-MM-dd" 형식으로 파싱한 후 자정 추가
-            return LocalDateTime.of(LocalDate.parse(expirationDateStr, simpleFormatter), LocalTime.MIDNIGHT);
-        }
-    }
 
     @Transactional
     public JobPostingDto.Response createJobPosting(String email, JobPostingDto.Request request) {

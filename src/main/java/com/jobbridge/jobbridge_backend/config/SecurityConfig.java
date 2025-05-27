@@ -51,6 +51,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/api/resume/**").hasAuthority("ROLE_INDIVIDUAL")
+                        .requestMatchers("/api/match/**").hasAuthority("ROLE_INDIVIDUAL")
                         .requestMatchers("/api/match/**").hasAuthority("ROLE_COMPANY")
 
                         // 채용공고 접근 권한 수정 - 조회는 모두 허용, 등록/수정/삭제는 COMPANY만 허용
