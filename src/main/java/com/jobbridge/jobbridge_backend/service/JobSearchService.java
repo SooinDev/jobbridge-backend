@@ -42,9 +42,9 @@ public class JobSearchService {
             experienceLevel = null;
         }
 
-        // If all search parameters are null, return recent jobs
+        // If all search parameters are null, return ALL jobs instead of recent jobs
         if (keyword == null && location == null && experienceLevel == null && searchDto.getDeadlineAfter() == null) {
-            return getRecentJobs();
+            return getAllJobsWithoutPaging();
         }
 
         LocalDateTime deadlineAfter = searchDto.getDeadlineAfter();
@@ -59,15 +59,25 @@ public class JobSearchService {
                 .collect(Collectors.toList());
     }
 
+    // ✅ 새로 추가: 모든 채용공고 조회 (페이징 없이)
+    @Transactional(readOnly = true)
+    public List<JobPostingDto.Response> getAllJobsWithoutPaging() {
+        List<JobPosting> allJobs = jobPostingRepository.findAllByOrderByCreatedAtDesc();
+        return allJobs.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<JobPostingDto.Response> getRecentJobs() {
-        List<JobPosting> recentJobs = jobPostingRepository.findTop10ByOrderByCreatedAtDesc();
+        // ✅ 수정: 최근 50개로 늘림 (또는 getAllJobsWithoutPaging() 사용)
+        List<JobPosting> recentJobs = jobPostingRepository.findTop50ByOrderByCreatedAtDesc();
         return recentJobs.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
-    // 새로 추가: 모든 채용공고 조회 (페이징 지원)
+    // ✅ 새로 추가: 페이징을 지원하는 모든 채용공고 조회
     @Transactional(readOnly = true)
     public List<JobPostingDto.Response> getAllJobs(int page, int size, String sortBy, String sortDir) {
         // 정렬 방향 설정
