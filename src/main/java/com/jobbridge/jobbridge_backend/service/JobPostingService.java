@@ -82,7 +82,11 @@ public class JobPostingService {
                 String company = jobNode.path("hiringOrganization").path("name").asText("");
                 String position = jobNode.path("title").asText("");
                 String title = (company + " " + position).trim();
-                String description = jobNode.path("description").asText("");
+                // 이거 삭제
+// String description = jobNode.path("description").asText("");
+
+// 이걸로 교체 (내가 만든 HTML 전체 추출 함수 호출)
+                String description = fetchFullWantedJobDescription(url);
 
                 // 경력 요건
                 JsonNode expNode = jobNode.path("experienceRequirements");
@@ -282,5 +286,66 @@ public class JobPostingService {
         }
         response.setCreatedAt(jobPosting.getCreatedAt().format(formatter));
         return response;
+    }
+
+    // Wanted 상세공고 전체 내용 (HTML 파싱 기반) 추출 함수
+    public String fetchFullWantedJobDescription(String url) {
+        try {
+            String html = restTemplate.getForObject(url, String.class);
+            StringBuilder fullText = new StringBuilder();
+
+            // 1. <span class="wds-h4ga6o">
+            String spanClass = "wds-h4ga6o";
+            String spanStart = "<span class=\"" + spanClass + "\">";
+            String spanEnd = "</span>";
+
+            int spanIdx = 0;
+            while ((spanIdx = html.indexOf(spanStart, spanIdx)) != -1) {
+                int start = spanIdx + spanStart.length();
+                int end = html.indexOf(spanEnd, start);
+                if (end == -1) break;
+
+                String raw = html.substring(start, end);
+                fullText.append(cleanHtml(raw)).append("\n\n");
+                spanIdx = end + spanEnd.length();
+            }
+
+            // 2. <div class="JobDescription_JobDescription__paragraph__87w8I">
+            String divClass = "JobDescription_JobDescription__paragraph__87w8I";
+            String divStart = "<div class=\"" + divClass + "\">";
+            String divEnd = "</div>";
+
+            int divIdx = 0;
+            while ((divIdx = html.indexOf(divStart, divIdx)) != -1) {
+                int start = divIdx + divStart.length();
+                int end = html.indexOf(divEnd, start);
+                if (end == -1) break;
+
+                String raw = html.substring(start, end);
+                fullText.append(cleanHtml(raw)).append("\n\n");
+                divIdx = end + divEnd.length();
+            }
+
+            return fullText.toString().trim();
+
+        } catch (Exception e) {
+            System.out.println("[상세공고 크롤링 실패] " + url + " → " + e.getMessage());
+            return "";
+        }
+    }
+
+    // HTML 태그 및 특수문자 정제용 내부 메서드
+    private String cleanHtml(String html) {
+        return html.replaceAll("(?i)<br\\s*/?>", "\n")
+                .replaceAll("(?i)<li>", "• ")
+                .replaceAll("(?i)</li>", "\n")
+                .replaceAll("<[^>]+>", "")
+                .replace("&nbsp;", " ")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .trim();
     }
 }
