@@ -82,10 +82,6 @@ public class JobPostingService {
                 String company = jobNode.path("hiringOrganization").path("name").asText("");
                 String position = jobNode.path("title").asText("");
                 String title = (company + " " + position).trim();
-                // 이거 삭제
-// String description = jobNode.path("description").asText("");
-
-// 이걸로 교체 (내가 만든 HTML 전체 추출 함수 호출)
                 String description = fetchFullWantedJobDescription(url);
 
                 // 경력 요건
