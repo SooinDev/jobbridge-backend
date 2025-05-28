@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -50,7 +51,14 @@ public class JobSearchController {
         return ResponseEntity.ok(recentJobs);
     }
 
-    // 새로 추가: 모든 채용공고 조회
+    // ✅ 새로 추가: 모든 채용공고 조회 (페이징 없이)
+    @GetMapping("/all-simple")
+    public ResponseEntity<List<JobPostingDto.Response>> getAllJobsSimple() {
+        List<JobPostingDto.Response> allJobs = jobSearchService.getAllJobsWithoutPaging();
+        return ResponseEntity.ok(allJobs);
+    }
+
+    // ✅ 기존 페이징 지원 API
     @GetMapping("/all")
     public ResponseEntity<List<JobPostingDto.Response>> getAllJobs(
             @RequestParam(defaultValue = "0") int page,
@@ -60,6 +68,13 @@ public class JobSearchController {
 
         List<JobPostingDto.Response> allJobs = jobSearchService.getAllJobs(page, size, sortBy, sortDir);
         return ResponseEntity.ok(allJobs);
+    }
+
+    // ✅ 새로 추가: 전체 공고 수 조회
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Long>> getTotalJobCount() {
+        long count = jobSearchService.getTotalJobCount();
+        return ResponseEntity.ok(Map.of("totalCount", count));
     }
 
     @GetMapping("/skill/{skill}")
