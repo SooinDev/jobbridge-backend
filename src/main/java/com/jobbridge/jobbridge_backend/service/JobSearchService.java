@@ -77,7 +77,7 @@ public class JobSearchService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ 새로 추가: 페이징을 지원하는 모든 채용공고 조회
+    // 새로 추가: 페이징을 지원하는 모든 채용공고 조회
     @Transactional(readOnly = true)
     public List<JobPostingDto.Response> getAllJobs(int page, int size, String sortBy, String sortDir) {
         // 정렬 방향 설정
