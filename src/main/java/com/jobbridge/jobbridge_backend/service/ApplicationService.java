@@ -23,7 +23,7 @@ public class ApplicationService {
     private final JobPostingRepository jobPostingRepository;
     private final NotificationRepository notificationRepository;
 
-    // ✅ 새로 추가: 특정 사용자가 특정 채용공고에 지원했는지 확인
+    // 새로 추가: 특정 사용자가 특정 채용공고에 지원했는지 확인
     public boolean hasUserAppliedToJob(User user, Long jobPostingId) {
         // 1. 채용공고 존재 여부 확인
         JobPosting jobPosting = jobPostingRepository.findById(jobPostingId)
@@ -73,7 +73,7 @@ public class ApplicationService {
         }
     }
 
-    // ✅ 내가 지원한 공고 내역 불러오기
+    // 내가 지원한 공고 내역 불러오기
     public List<MyApplicationDto> getApplicationsByUser(User user) {
         List<Application> applications = applicationRepository.findByApplicant(user);
 
