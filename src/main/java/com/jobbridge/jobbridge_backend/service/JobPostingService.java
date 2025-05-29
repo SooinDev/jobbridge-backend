@@ -48,7 +48,7 @@ public class JobPostingService {
         Set<String> existingUrls = storedJobs.stream().map(JobPosting::getUrl).collect(Collectors.toSet());
 
         // 2) ID 범위 하드코딩 (283223 ~ 283323)
-        for (int id = 283223; id <= 284323; id++) {
+        for (int id = 283223; id <= 283323; id++) {
             String url = "https://www.wanted.co.kr/wd/" + id;
 
             // 3) 중복 URL 스킵

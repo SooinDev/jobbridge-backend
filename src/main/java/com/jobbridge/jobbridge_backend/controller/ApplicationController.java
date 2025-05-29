@@ -58,17 +58,20 @@ public class ApplicationController {
         }
     }
 
-    // ✅ 지원하기
+// ApplicationController.java 수정된 지원하기 메서드
+
     @PostMapping("/apply/{jobPostingId}")
     public ResponseEntity<String> applyToJob(
             @PathVariable Long jobPostingId,
+            @RequestParam Long resumeId,  // 추가된 파라미터
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         try {
             User user = userDetails.getUser();
             System.out.println("➡️ 지원 요청 - 사용자 ID: " + user.getId() +
                     ", 이메일: " + user.getEmail() +
-                    ", 채용공고 ID: " + jobPostingId);
+                    ", 채용공고 ID: " + jobPostingId +
+                    ", 이력서 ID: " + resumeId);
 
             // 사용자 유형 확인
             if (user.getUserType() != User.UserType.INDIVIDUAL) {
@@ -76,10 +79,11 @@ public class ApplicationController {
                         .body("개인 회원만 지원할 수 있습니다. 현재 회원 유형: " + user.getUserType());
             }
 
-            // 지원 처리 - 서비스 메소드 호출
-            applicationService.applyToJob(user, jobPostingId);
+            // 지원 처리 - 이력서 ID 포함
+            applicationService.applyToJob(user, jobPostingId, resumeId);
             System.out.println("✅ 지원 처리 완료 - 사용자 ID: " + user.getId() +
-                    ", 채용공고 ID: " + jobPostingId);
+                    ", 채용공고 ID: " + jobPostingId +
+                    ", 이력서 ID: " + resumeId);
 
             return ResponseEntity.ok("지원이 완료되었습니다.");
         } catch (IllegalArgumentException e) {
