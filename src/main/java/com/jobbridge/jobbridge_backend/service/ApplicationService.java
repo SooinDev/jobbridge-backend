@@ -73,7 +73,7 @@ public class ApplicationService {
         }
     }
 
-    // ✅ 내가 지원한 공고 내역 불러오기
+    // 내가 지원한 공고 내역 불러오기
     public List<MyApplicationDto> getApplicationsByUser(User user) {
         List<Application> applications = applicationRepository.findByApplicant(user);
 
