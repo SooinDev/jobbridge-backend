@@ -51,8 +51,9 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/api/resume/**").hasAuthority("ROLE_INDIVIDUAL")
-                        .requestMatchers("/api/match/**").hasAuthority("ROLE_INDIVIDUAL")
-                        .requestMatchers("/api/match/**").hasAuthority("ROLE_COMPANY")
+                        .requestMatchers("/api/match/jobs").hasAuthority("ROLE_INDIVIDUAL")      // 개인: 추천 채용공고
+                        .requestMatchers("/api/match/resumes").hasAuthority("ROLE_COMPANY")      // 기업: 추천 이력서
+                        .requestMatchers("/api/match/career").hasAnyAuthority("ROLE_INDIVIDUAL", "ROLE_COMPANY")  // 둘 다
 
                         // 채용공고 접근 권한 수정 - 조회는 모두 허용, 등록/수정/삭제는 COMPANY만 허용
                         .requestMatchers("/api/job-posting/my", "/api/job-posting/{id}").authenticated()
