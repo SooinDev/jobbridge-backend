@@ -82,11 +82,7 @@ public class JobPostingService {
                 String company = jobNode.path("hiringOrganization").path("name").asText("");
                 String position = jobNode.path("title").asText("");
                 String title = (company + " " + position).trim();
-<<<<<<< HEAD
-=======
 
-                // 상세공고 데이터 불러오기
->>>>>>> 2639ce772c1b0a4e5cd39ae76512dc851e855bc9
                 String description = fetchFullWantedJobDescription(url);
 
                 // 경력 요건
