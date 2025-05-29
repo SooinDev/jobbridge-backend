@@ -70,7 +70,7 @@ public class JobSearchService {
 
     @Transactional(readOnly = true)
     public List<JobPostingDto.Response> getRecentJobs() {
-        // ✅ 수정: 최근 50개로 늘림 (또는 getAllJobsWithoutPaging() 사용)
+        // 수정: 최근 50개로 늘림 (또는 getAllJobsWithoutPaging() 사용)
         List<JobPosting> recentJobs = jobPostingRepository.findTop50ByOrderByCreatedAtDesc();
         return recentJobs.stream()
                 .map(this::convertToDto)
