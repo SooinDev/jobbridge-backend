@@ -1,5 +1,6 @@
 package com.jobbridge.jobbridge_backend.service;
 
+import com.jobbridge.jobbridge_backend.dto.ApplicantInfoDto;
 import com.jobbridge.jobbridge_backend.dto.MyApplicationDto;
 import com.jobbridge.jobbridge_backend.entity.Application;
 import com.jobbridge.jobbridge_backend.entity.JobPosting;
@@ -89,5 +90,21 @@ public class ApplicationService {
                             app.getAppliedAt());
                 })
                 .toList();
+    }
+
+    public List<ApplicantInfoDto> getApplicantsByJobPosting(Long jobPostingId) {
+        List<Application> applications = applicationRepository.findByJobPosting_Id(jobPostingId);
+
+        return applications.stream()
+                .map(app -> new ApplicantInfoDto(
+                        app.getApplicant().getName(),
+                        app.getApplicant().getEmail(),
+                        app.getAppliedAt()
+                )).toList();
+    }
+
+    public JobPosting getJobPostingById(Long id) {
+        return jobPostingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("채용공고를 찾을 수 없습니다."));
     }
 }
