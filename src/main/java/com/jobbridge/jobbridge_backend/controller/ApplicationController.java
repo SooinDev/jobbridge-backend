@@ -1,7 +1,9 @@
 package com.jobbridge.jobbridge_backend.controller;
 
+import com.jobbridge.jobbridge_backend.dto.ApplicantInfoDto;
 import com.jobbridge.jobbridge_backend.dto.MyApplicationDto;
 import com.jobbridge.jobbridge_backend.entity.Application;
+import com.jobbridge.jobbridge_backend.entity.JobPosting;
 import com.jobbridge.jobbridge_backend.entity.User;
 import com.jobbridge.jobbridge_backend.repository.ApplicationRepository;
 import com.jobbridge.jobbridge_backend.security.UserDetailsImpl;
@@ -131,5 +133,23 @@ public class ApplicationController {
         List<Application> applications = applicationRepository.findAll();
         System.out.println("📊 전체 지원 내역 수: " + applications.size());
         return ResponseEntity.ok(applications);
+    }
+
+    // 기업용 - 해당 공고의 지원자 조회
+    @GetMapping("/applications/company/{jobPostingId}")
+    public ResponseEntity<List<ApplicantInfoDto>> getApplicantsForJobPosting(
+            @PathVariable Long jobPostingId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        User user = userDetails.getUser();
+        JobPosting jobPosting = applicationService.getJobPostingById(jobPostingId);
+
+        // ✅ 보안: 해당 공고의 작성자가 아니면 접근 불가
+        if (jobPosting.getCompany() == null || !jobPosting.getCompany().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<ApplicantInfoDto> applicants = applicationService.getApplicantsByJobPosting(jobPostingId);
+        return ResponseEntity.ok(applicants);
     }
 }
